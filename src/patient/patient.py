@@ -21,6 +21,7 @@ class Patient:
         # Store all data with timestamps
         self.admission_status = None  # PCU or ICU
         self.insulin_drip = False
+        self.on_D5 = False
         self.vital_signs = []  # [(timestamp, heart_rate, blood_pressure, respiratory_rate)]
         self.glucose_levels = []  # [(timestamp, glucose_mg_dl)]
         self.ketone_levels = []  # [(timestamp, beta_hydroxybutyrate_mmol_L)]

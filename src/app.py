@@ -7,22 +7,83 @@ from patient.patient import Patient, DKASeverity  # Import your Patient class
 
 
 def write_patient_data():
-    st.subheader("🏥 Patient Info:")
-    st.write(f"Patient ID: {st.session_state.patient_id}")
-    st.write(f"Patient Name: {st.session_state.patient.name}")
-    st.write(f"Patient Age: {st.session_state.patient.age}")
-    st.write(f"Patient Weight: {st.session_state.patient.weight} kg")
-    st.write(f"Patient Gender: {st.session_state.patient.gender}")
+    st.header("🏥 Patient Info", divider='gray')
+    # st.write(f"Patient ID: {st.session_state.patient_id}")
+    # st.write(f"Patient Name: {st.session_state.patient.name}")
+    # st.write(f"Patient Age: {st.session_state.patient.age}")
+    # st.write(f"Patient Weight: {st.session_state.patient.weight} kg")
+    # st.write(f"Patient Gender: {st.session_state.patient.gender}")
+    patient_data = {
+        "Patient Attribute": ["Patient ID", "Name", "Age", "Weight (kg)", "Gender"],
+        "Details": [
+            st.session_state.patient_id,
+            st.session_state.patient.name,
+            st.session_state.patient.age,
+            st.session_state.patient.weight,
+            st.session_state.patient.gender,
+        ],
+    }
+
+    # Convert dictionary to DataFrame
+    df = pd.DataFrame(patient_data)
+
+    # Display DataFrame in Streamlit
+    st.dataframe(df, hide_index=True, )
+    # st.write(df.to_string(index=False, header=False))
+    # patient_data = pd.DataFrame([
+    #     ["Patient ID", st.session_state.patient_id],
+    #     ["Name", st.session_state.patient.name],
+    #     ["Age", st.session_state.patient.age],
+    #     ["Weight (kg)", st.session_state.patient.weight],
+    #     ["Gender", st.session_state.patient.gender]
+    # ])
+
+    # # Display DataFrame without column headers
+    # st.dataframe(patient_data.style.hide(axis="columns"))
 
 
 def write_patient_measurements(measurements):
-    st.subheader("📊 Laboratory Studies:")
-    for key, value in measurements.items():
-        st.write(f"{key}: {value}")
+    st.subheader("🧪 Laboratory Studies")
+    # df = pd.DataFrame(measurements)
+
+    # # Display DataFrame in Streamlit
+    # st.dataframe(df, hide_index=True)
+    units = {
+        "Sodium": "mmol/L",
+        "Potassium": "mmol/L",
+        "Chloride": "mmol/L",
+        "Bicarbonate": "mmol/L",
+        "pH": "pH scale",
+        "Glucose": "mg/dL",
+        "Anion Gap": "mmol/L"
+    }
+
+    filtered_measurements = {key: value for key, value in measurements.items() if key != "Time"}
+
+    # Convert measurements into a DataFrame
+    df = pd.DataFrame({
+        "Test": filtered_measurements.keys(),
+        "Value": filtered_measurements.values(),
+        "Units": [units[test] for test in filtered_measurements.keys()]  # Assign units dynamically
+    })
+
+    # Display DataFrame in Streamlit
+    st.dataframe(df, hide_index=True)
+    # Convert measurements into a DataFrame
+    # df = pd.DataFrame({
+    #     "Test": measurements.keys(),
+    #     "Value": measurements.values(),
+    #     "Units": [units[test] for test in measurements.keys()]  # Match unit to each test
+    # })
+
+    # # Display DataFrame in Streamlit
+    # st.dataframe(df, hide_index=True)
+    # # for key, value in measurements.items():
+    # #     st.write(f"{key}: {value}")
 
 
 def write_patient_recommendations(recommendations):
-    st.subheader("🚑 Recommendations to the Clinician:")
+    st.subheader("💡     Recommendations to the Clinician:")
     for recommendation in recommendations:
         st.write(recommendation)
 
@@ -62,7 +123,7 @@ if "patient" in st.session_state:
     write_patient_data()
     if len(st.session_state.history) == 0:
         patient = st.session_state.patient  # Retrieve stored patient
-        st.header("📊 Action Required: Input Initial Laboratory Results")
+        st.header("🧪 Input Initial Laboratory Results", divider='gray')
         sodium = st.number_input("Sodium (mmol/L)", min_value=100, max_value=170, value=140)
         potassium = st.number_input("Potassium (mmol/L)", min_value=2, max_value=7, value=4)
         chloride = st.number_input("Chloride (mmol/L)", min_value=70, max_value=130, value=100)
@@ -82,7 +143,7 @@ if "patient" in st.session_state:
             st.session_state.history.append(
                 (
                     {
-                        "Time": datetime.now(),
+                        "Time": datetime.now().strftime("%H:%M - %m/%d/%Y"),
                         "Sodium": sodium,
                         "Potassium": potassium,
                         "Chloride": chloride,
@@ -107,11 +168,13 @@ if "patient" in st.session_state:
         patient = st.session_state.patient
 
         if patient.admission_status:
-            st.header("Patient Data")
             print(st.session_state.history)
             for history_item in st.session_state.history:
+                time = history_item[0]["Time"]
+                st.header(f"📊 Patient Data at {time}", divider="gray")
                 print('history_item')
                 print(history_item[0])
+                # st.header(f"Results & Recommendations at {time}")
                 write_patient_measurements(history_item[0])
                 write_patient_recommendations(history_item[1])
 
@@ -180,47 +243,76 @@ if "patient" in st.session_state:
                     else:
                         st.write("Run IV fluids D5 NS w 20 meq KCl @ 250 cc / hr")
                         recommendations.append("Run IV fluids D5 NS w 20 meq KCl @ 250 cc / hr")
+            st.write("Come back in 1 hour with electrolytes and blood sugar reading")
+            recommendations.append("Come back in 1 hour with electrolytes and blood sugar reading")
+            # # measure_glucose()
+            # st.write("Come back in 1 hour with blood sugar reading")
+            # recommendations.append("Come back in 1 hour with blood sugar reading")
 
-            # measure_glucose()
-            st.write("Come back in 1 hour with blood sugar reading")
-            recommendations.append("Come back in 1 hour with blood sugar reading")
+            # glucose = st.number_input("Glucose (mg/dL)", min_value=0, value=100, key=3)
+            # if st.button("Measure Glucose", key="{2}"):
+            #     glucose_time, glucose = patient.add_glucose(glucose)
 
-            glucose = st.number_input("Glucose (mg/dL)", min_value=0, value=100, key=3)
-            if st.button("Measure Glucose", key="{2}"):
-                glucose_time, glucose = patient.add_glucose(glucose)
-
-                # st.write(f"Glucose: {glucose} at {glucose_time}")
-                # EMERGENCY TREAMENT CHECK
-                # if glucose < 100: HAPPY PATH
-                    # Give amp of D50 and decrease insulin drip by 50%
-                    # come back in 1 hour with blood sugar reading and goto DP get anion gap
-                # if glucose > 100 and < 250:
-                    # if no current D5 solution:
-                        # add D5 to current IV fluids
-                        # cut insulin by 25%
-                    # if current D5 solution:
-                        # cut insulin by 50%
-                # if glucose > 250:
-                    # did glucose drop enough?
-                    # if glucose dropped by <10%:
-                        # increase insulin drip by 25%
-                        # measure glucose()
-                    # if glucose dropped by >10%:
-                        # continue
-                
-                # measure sodium, potassium, chloride, bicarb, gluc
+            #     # st.write(f"Glucose: {glucose} at {glucose_time}")
+            # #     # EMERGENCY TREAMENT CHECK
+            # if glucose < 100:
+            #     st.write("Give amp of D50 and decrease insulin drip by 50%")
+            #     patient.on_D5 = True
+            #     recommendations.append("Give amp of D50 and decrease insulin drip by 50%")
+            #     # come back in 1 hour with blood sugar reading and goto DP get anion gap
+            # elif glucose > 100 and glucose < 250:
+            #     if not patient.on_D5:
+            #         st.write("Add D5 to current IV fluids")
+            #         recommendations.append("Add D5 to current IV fluids")
+            #         st.write("Cut insulin by 25%")
+            #         recommendations.append("Cut insulin by 25%")
+            #     else: 
+            #         st.write("Cut Insulin by 50%")
+            #         recommendations.append("Cut Insulin by 50%")
+            # elif glucose > 250:
+            #     if glucose < 0.9 * glucose:
+            #         # if no current D5 solution:
+            # add D5 to current IV fluids
+            # cut insulin by 25%
+        # if current D5 solution:
+            # cut insulin by 50%
+            #         # cut insulin by 25%
+            #     else:
+            # if glucose < 100: HAPPY PATH
+                # Give amp of D50 and decrease insulin drip by 50%
+                # come back in 1 hour with blood sugar reading and goto DP get anion gap
+            # if glucose > 100 and < 250:
+                # if no current D5 solution:
+                    # add D5 to current IV fluids
+                    # cut insulin by 25%
+                # if current D5 solution:
+                    # cut insulin by 50%
+            # if glucose > 250:
+                # did glucose drop enough?
+                # if glucose dropped by <10%:
+                    # increase insulin drip by 25%
+                    # measure glucose()
+                # if glucose dropped by >10%:
+                    # continue
+            
+            # measure sodium, potassium, chloride, bicarb, gluc
                 # goto anion gap
 
-                sodium = st.number_input("Sodium (mmol/L)", min_value=100, max_value=170, value=140)
-                potassium = st.number_input("Potassium (mmol/L)", min_value=2, max_value=7, value=4)
-                chloride = st.number_input("Chloride (mmol/L)", min_value=70, max_value=130, value=100)
-                bicarbonate = st.number_input("Bicarbonate (mmol/L)", min_value=5, max_value=40, value=22)
-                pH = st.number_input("pH", min_value=6.5, max_value=7.8, value=7.3)
-                glucose = st.number_input("Glucose (mg/dL)", min_value=0, value=100)
+            st.header("🧪 Input Subsequent Laboratory Results", divider='gray')
+            sodium = st.number_input("Sodium (mmol/L)", min_value=100, max_value=170, value=140)
+            potassium = st.number_input("Potassium (mmol/L)", min_value=2, max_value=7, value=4)
+            chloride = st.number_input("Chloride (mmol/L)", min_value=70, max_value=130, value=100)
+            bicarbonate = st.number_input("Bicarbonate (mmol/L)", min_value=5, max_value=40, value=22)
+            pH = st.number_input("pH", min_value=6.5, max_value=7.8, value=7.3)
+            glucose = st.number_input("Glucose (mg/dL)", min_value=0, value=100)
+
+            if st.button("Add Laboratory Results"):
+                anion_gap_time, anion_gap = patient.add_anion_gap(sodium, potassium, chloride, bicarbonate)
+                now = datetime.now().strftime("%H:%M - %m/%d/%Y")
                 st.session_state.history.append(
                     (
                         {
-                            "Time": datetime.now(),
+                            "Time": now,
                             "Sodium": sodium,
                             "Potassium": potassium,
                             "Chloride": chloride,
