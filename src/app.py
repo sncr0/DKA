@@ -6,6 +6,7 @@ from datetime import datetime
 from patient.patient import Patient, DKASeverity  # Import your Patient class
 
 
+dka_resolved = False
 def write_patient_data():
     st.header("👤 Patient Info", divider='gray')
     patient_data = {
@@ -54,7 +55,7 @@ def write_patient_recommendations(recommendations):
 if "history" not in st.session_state:
     st.session_state.history = []
 
-st.title("🩺 DKA Patient Management")
+st.title("🩺 DKA SmartFlow")
 
 
 # Generate a unique patient ID
@@ -119,7 +120,7 @@ if "patient" in st.session_state:
             )
             st.rerun()
 
-    else:
+    if True:
         patient = st.session_state.patient
 
         if patient.admission_status:
@@ -148,6 +149,8 @@ if "patient" in st.session_state:
             print(recommendations)
             if anion_gap < 12:
                 recommendations.append("DKA Resolved")
+                st.write("DKA Resolved")
+                dka_resolved = True
                 # resolution time = start - finish
             elif anion_gap > 12:
                 if not patient.insulin_drip:
@@ -159,69 +162,69 @@ if "patient" in st.session_state:
 
             # GET CORRECTED SODIUM
             corrected_sodium = patient.get_corrected_sodium(sodium, glucose)
+            if not dka_resolved:
+                # CHECK ELECTROLYTES
+                if glucose > 250:
+                    if corrected_sodium > 135:
+                        if potassium > 4:
+                            # st.write("Run IV fluids 0.45 NS @ 250 cc / hr")
+                            recommendations.append("Run IV fluids 0.45 NS @ 250 cc / hr")
+                        else:
+                            # st.write("Run IV fluids 0.45 NS w 20 meq KCl @ 250 cc / hr")
+                            recommendations.append("Run IV fluids 0.45 NS w 20 meq KCl @ 250 cc / hr")
+                    elif corrected_sodium < 135:
+                        if potassium > 4:
+                            # st.write("Run IV fluids NS @ 250 cc / hr")
+                            recommendations.append("Run IV fluids NS @ 250 cc / hr")
+                        else:
+                            # st.write("Run IV fluids NS w 20 meq KCl @ 250 cc / hr")
+                            recommendations.append("Run IV fluids NS w 20 meq KCl @ 250 cc / hr")
+                elif glucose < 250:
+                    if corrected_sodium > 135:
+                        if potassium > 4:
+                            # st.write("Run IV fluids D5 0.45 NS @ 250 cc / hr")
+                            recommendations.append("Run IV fluids D5 0.45 NS @ 250 cc / hr")
+                        else:
+                            # st.write("Run IV fluids D5 0.45 NS w 20 meq KCl @ 250 cc / hr")
+                            recommendations.append("Run IV fluids D5 0.45 NS w 20 meq KCl @ 250 cc / hr")
+                    elif corrected_sodium < 135:
+                        if potassium > 4:
+                            # st.write("Run IV fluids D5 NS @ 250 cc / hr")
+                            recommendations.append("Run IV fluids D5 NS @ 250 cc / hr")
+                        else:
+                            # st.write("Run IV fluids D5 NS w 20 meq KCl @ 250 cc / hr")
+                            recommendations.append("Run IV fluids D5 NS w 20 meq KCl @ 250 cc / hr")
+                # st.write("Come back in 1 hour with electrolytes and blood sugar reading")
+                recommendations.append("Come back in 1 hour with electrolytes and blood sugar reading")
 
-            # CHECK ELECTROLYTES
-            if glucose > 250:
-                if corrected_sodium > 135:
-                    if potassium > 4:
-                        # st.write("Run IV fluids 0.45 NS @ 250 cc / hr")
-                        recommendations.append("Run IV fluids 0.45 NS @ 250 cc / hr")
-                    else:
-                        # st.write("Run IV fluids 0.45 NS w 20 meq KCl @ 250 cc / hr")
-                        recommendations.append("Run IV fluids 0.45 NS w 20 meq KCl @ 250 cc / hr")
-                elif corrected_sodium < 135:
-                    if potassium > 4:
-                        # st.write("Run IV fluids NS @ 250 cc / hr")
-                        recommendations.append("Run IV fluids NS @ 250 cc / hr")
-                    else:
-                        # st.write("Run IV fluids NS w 20 meq KCl @ 250 cc / hr")
-                        recommendations.append("Run IV fluids NS w 20 meq KCl @ 250 cc / hr")
-            elif glucose < 250:
-                if corrected_sodium > 135:
-                    if potassium > 4:
-                        # st.write("Run IV fluids D5 0.45 NS @ 250 cc / hr")
-                        recommendations.append("Run IV fluids D5 0.45 NS @ 250 cc / hr")
-                    else:
-                        # st.write("Run IV fluids D5 0.45 NS w 20 meq KCl @ 250 cc / hr")
-                        recommendations.append("Run IV fluids D5 0.45 NS w 20 meq KCl @ 250 cc / hr")
-                elif corrected_sodium < 135:
-                    if potassium > 4:
-                        # st.write("Run IV fluids D5 NS @ 250 cc / hr")
-                        recommendations.append("Run IV fluids D5 NS @ 250 cc / hr")
-                    else:
-                        # st.write("Run IV fluids D5 NS w 20 meq KCl @ 250 cc / hr")
-                        recommendations.append("Run IV fluids D5 NS w 20 meq KCl @ 250 cc / hr")
-            # st.write("Come back in 1 hour with electrolytes and blood sugar reading")
-            recommendations.append("Come back in 1 hour with electrolytes and blood sugar reading")
+                st.header("🧪 Input Subsequent Laboratory Results", divider='gray')
+                sodium = st.number_input("Sodium (mmol/L)", min_value=100, max_value=170, value=140)
+                potassium = st.number_input("Potassium (mmol/L)", min_value=2, max_value=7, value=4)
+                chloride = st.number_input("Chloride (mmol/L)", min_value=70, max_value=1300, value=100)
+                bicarbonate = st.number_input("Bicarbonate (mmol/L)", min_value=5, max_value=40, value=22)
+                pH = st.number_input("pH", min_value=6.5, max_value=7.8, value=7.3)
+                glucose = st.number_input("Glucose (mg/dL)", min_value=0, value=100)
 
-            st.header("🧪 Input Subsequent Laboratory Results", divider='gray')
-            sodium = st.number_input("Sodium (mmol/L)", min_value=100, max_value=170, value=140)
-            potassium = st.number_input("Potassium (mmol/L)", min_value=2, max_value=7, value=4)
-            chloride = st.number_input("Chloride (mmol/L)", min_value=70, max_value=1300, value=100)
-            bicarbonate = st.number_input("Bicarbonate (mmol/L)", min_value=5, max_value=40, value=22)
-            pH = st.number_input("pH", min_value=6.5, max_value=7.8, value=7.3)
-            glucose = st.number_input("Glucose (mg/dL)", min_value=0, value=100)
-
-            if st.button("Add Laboratory Results"):
-                anion_gap_time, anion_gap = patient.add_anion_gap(sodium, potassium, chloride, bicarbonate)
-                now = datetime.now().strftime("%H:%M - %m/%d/%Y")
-                st.session_state.history.append(
-                    (
-                        {
-                            "Time": now,
-                            "Sodium": sodium,
-                            "Potassium": potassium,
-                            "Chloride": chloride,
-                            "Bicarbonate": bicarbonate,
-                            "pH": pH,
-                            "Glucose": glucose,
-                            "Anion Gap": anion_gap,
-                        },
-                        recommendations
+                if st.button("Add Laboratory Results"):
+                    anion_gap_time, anion_gap = patient.add_anion_gap(sodium, potassium, chloride, bicarbonate)
+                    now = datetime.now().strftime("%H:%M - %m/%d/%Y")
+                    st.session_state.history.append(
+                        (
+                            {
+                                "Time": now,
+                                "Sodium": sodium,
+                                "Potassium": potassium,
+                                "Chloride": chloride,
+                                "Bicarbonate": bicarbonate,
+                                "pH": pH,
+                                "Glucose": glucose,
+                                "Anion Gap": anion_gap,
+                            },
+                            recommendations
+                        )
                     )
-                )
-                recommendations = []
-                st.rerun()
+                    recommendations = []
+                    st.rerun()
 
     if st.button("View Patient Data"):
         st.write(st.session_state.patient.__dict__)  # Debugging view
